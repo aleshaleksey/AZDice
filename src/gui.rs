@@ -171,7 +171,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			widget::Canvas::new()
 				.w(ROLL_BOX_W-HOR_MAR_BOX)
 				.h(ui_wh[1]-REP_BOX_W-VER_MAR_BOX*3.0)
-				.down_from(ids.reps_input,VER_MAR_BOX)
+				.down_from(ids.intro_button,VER_MAR_BOX)
 				.scroll_kids_vertically()
 				.color(BACKGR_COLOUR)
 				.border(BORDER_WIDTH)
