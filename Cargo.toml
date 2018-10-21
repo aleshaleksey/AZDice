@@ -5,15 +5,13 @@ authors = ["Aleksey Zholobenko"]
 
 [dependencies]
 rand="0.3.16"
-conrod = {path = "/home/alesha/Code/conrod"}
+conrod = "=0.57.0"
 glium = { version = "=0.20", optional = true }
 winit = { version = "=0.10", optional = true }
 num= "0.1"
 libc= {version ="=0.2.34",optional= true}
 find_folder= "0.3.0"
-clipboard = {path="/home/alesha/Code/rust-clipboard"}
-
-#conrod="=0.57.0"
+clipboard = "=0.5.0"
 
 [profile.release]
 opt-level = 3
