@@ -57,7 +57,7 @@ pub struct Flow {
 	pub input: String,
 	pub reps:usize,
 	pub data:Vec<(String,Vec<(i32,f64)>)>,
-	pub active_data:Option<(String,Vec<[f64;2]>)>,
+	pub active_data:Option<(String,Vec<[f64;2]>,usize)>,
 	pub axes: [String;2],
 	pub rep_box: (String,bool),
 	pub roll_box: (String,bool),
@@ -100,6 +100,7 @@ widget_ids!(
 			
 			data_canvas,
 				datasets_matrix,
+			remove_active_dataset_button,
 			
 			graph_canvas,
 				title,
@@ -124,7 +125,8 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 	widget::Canvas::new().color(BACKGR_COLOUR).set(ids.master,ui);
 	
 	for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
-							.label("Help")
+							.label(HELP_BUTTON)
+							.border(BORDER_WIDTH)
 							.top_left_with_margin_on(ids.master,HOR_MAR_BOX)
 							.set(ids.intro_button,ui){
 		flow.init = true;
@@ -188,13 +190,14 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			while let Some(db) = dataset_matrix.next(ui) {
 				let r = db.row as usize;
 				for _click in db.set(button.clone().label(&flow.data[r].0),ui) {
-					flow.active_data = convert_data(&flow.data[r]);
+					flow.active_data = convert_data(&flow.data[r],r);
 				};
 			};
 			
 			//Draw the graph if we have some active data.
+			let mut deactivate = false;
 			match flow.active_data {
-				Some((ref t,ref d)) => {
+				Some((ref t,ref d, index)) => {
 					let mut wh_graph = ui.wh_of(ids.data_canvas).unwrap();
 					wh_graph[0] = ui_wh[0]-wh_graph[0]-HOR_MAR_BOX*3.0;
 					
@@ -209,11 +212,21 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 					);
 					
 					widget::Text::new(&coord_out)
-						.right_from(ids.roll_input,HOR_MAR_BOX)
+						.down_from(ids.graph_canvas,HOR_MAR_BOX)
 						.set(ids.coord_highlighted,ui);
+						
+					for _click in button.clone().label(DELETE_ACTIVE)
+												.border(BORDER_WIDTH)
+												.down_from(ids.data_canvas,HOR_MAR_BOX)
+												.set(ids.remove_active_dataset_button,ui) {
+						flow.data.remove(index);
+						deactivate = true;
+					};
+					
 				},
 				_		=> {},
 			};
+			if deactivate {flow.active_data = None;};
 		};
 		
 		//If calculating, set calculating canvas.
@@ -326,11 +339,12 @@ fn lab_no_chooser(wh_gr: &[f64;2]) -> usize {
 
 //Convert data to a format the graph drawer will take.
 //NB it should be noted that initial data was (y,x), while it must become [x,y].
-fn convert_data(data:&(String,Vec<(i32,f64)>)) -> Option<(String,Vec<[f64;2]>)> {
+fn convert_data_marker(){}
+fn convert_data(data:&(String,Vec<(i32,f64)>),index:usize) -> Option<(String,Vec<[f64;2]>,usize)> {
 	let mut output_data:Vec<[f64;2]> = Vec::with_capacity(data.1.len());
 	
 	for (i,f) in data.1.iter() {output_data.push([*i as f64,*f])};
-	Some((data.0.clone(),output_data))
+	Some((data.0.clone(),output_data,index))
 	
 }
 
@@ -343,6 +357,9 @@ pub fn copy_to_clipboard(text:&str){
 	
 
 //STRING CONSTANT STORAGE AREA
+
+const DELETE_ACTIVE:&str = "Delete Active Dataset";
+const HELP_BUTTON:&str = "Help";
 const REP_BOX:&str = "Input repeats";
 pub const ROLL_BOX:&str = "Input roll";
 const COLD_AND_CALCULATING:&str = "Calculating distribution by rolling lots of virtual dice. This may take some time.";
