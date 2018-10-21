@@ -1,4 +1,5 @@
-#AZDice
+AZDice
+======
 
 A GUI tool for generating and visualising dice roll probability distributions.
 
