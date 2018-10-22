@@ -31,6 +31,10 @@ Displays distribution in terminal window.
 
 Currently rolls virtual dice (using rand crate) lots of times. Then compares the answer.
 
+***ToDo***
+
+Make the graph point tracker more efficient for stupidly large numbers of data points (ie not linear).
+
 Compiling
 ---------
 
