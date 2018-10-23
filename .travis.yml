@@ -1,5 +1,7 @@
 language: rust
 sudo: false
+git:
+  -depth: false
 rust:
   - 1.28.0
 matrix:
