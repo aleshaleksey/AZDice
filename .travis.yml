@@ -3,7 +3,7 @@ cache: -cargo
 os: -linux
 sudo: false
 git:
-  -depth: false
+  -depth: 1
 rust:
   - 1.28.0
 branches: -master
