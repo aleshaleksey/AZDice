@@ -9,6 +9,9 @@ Intended to help people trying to get game balance just right in homebrewed tabl
 
 Current State
 -------------
+***CLI***
+
+The refactored original cli version is now up.
 
 ***GUI***
 
@@ -33,7 +36,8 @@ Currently rolls virtual dice (using rand crate) lots of times. Then compares the
 
 ***ToDo***
 
-Make the graph point tracker more efficient for stupidly large numbers of data points (ie not linear).
+-Make the graph point tracker more efficient for stupidly large numbers of data points (over 10K) (ie not linear).
+-Figure out a sensible way of displaying a graph in the terminal in the cli version.
 
 Compiling
 ---------
@@ -42,4 +46,4 @@ Compiles on rust 1.28.0 with cargo build --release --features="winit glium libc"
 
 Feedback
 --------
-Please let me know why this sucks and how it should be made less sucky.
+Please let me know why this ~sucks~ might suck and how it should be made better.
