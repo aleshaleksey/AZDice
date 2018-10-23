@@ -17,7 +17,7 @@ use std;
 #[allow(dead_code)]
 fn interaction_and_times_triggered(button_id: widget::Id, ui: &UiCell) -> (widget::button::Interaction, u16) {
     let input = ui.widget_input(button_id);
-    let interaction = input.mouse().map_or(Interaction::Idle, |mouse| {
+    let interaction = input.mouse().map_or(widget::button::Interaction::Idle, |mouse| {
         let is_pressed =
             mouse.buttons.left().is_down()
             || ui.global_input().current.touch.values()
