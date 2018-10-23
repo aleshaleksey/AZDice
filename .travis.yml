@@ -1,11 +1,12 @@
 language: rust
-cache: -cargo
-os: -linux
+cache: cargo
 sudo: false
+branches: master
+os: -linux
 git:
-  -depth: 1
+  depth: 1
 rust:
   - 1.28.0
-branches: -master
-script -cargo build --verbose --all
-    
+name: "azdice-conrod"
+script:
+- cargo build --verbose --all
