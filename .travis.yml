@@ -1,0 +1,11 @@
+language: rust
+sudo: false
+rust:
+  - 1.28.0
+matrix:
+  include:
+  -name: "azdice"
+    script: -cargo build
+  -name: "azdice-conrod"
+    script: cargo build --features="winit glium libc"
+    
