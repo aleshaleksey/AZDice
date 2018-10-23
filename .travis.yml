@@ -9,4 +9,4 @@ rust:
   - 1.28.0
 name: "azdice-conrod"
 script:
-- cargo build --verbose --all
+- cargo build --release --verbose --all
