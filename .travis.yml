@@ -10,5 +10,5 @@ matrix:
     script: -cargo build
   include:
   -name: "azdice-conrod"
-    script: -cargo build --features="winit glium libc"
+    script: -cargo build
     
