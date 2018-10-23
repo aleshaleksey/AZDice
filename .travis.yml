@@ -11,4 +11,4 @@ name: "azdice-conrod"
 before_script:
 - cargo update
 script:
-- cargo build --release --faetures="libc glium winit" --verbose --all
+- cargo build --release --features="libc glium winit" --verbose --all
