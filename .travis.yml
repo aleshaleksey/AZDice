@@ -7,11 +7,5 @@ git:
 rust:
   - 1.28.0
 branches: -master
-matrix:
-  include:
-  -name: "azdice"
-    script: -cargo build --verbose --all
-  include:
-  -name: "azdice-conrod"
-    script: -cargo build --verbose --all
+script -cargo build --verbose --all
     
