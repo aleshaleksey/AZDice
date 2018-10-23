@@ -8,5 +8,7 @@ git:
 rust:
   - 1.28.0
 name: "azdice-conrod"
+before_script:
+- cargo update
 script:
 - cargo build --release --verbose --all
