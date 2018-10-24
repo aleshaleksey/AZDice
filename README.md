@@ -44,7 +44,7 @@ Compiling
 
 Compiles on rust 1.28.0 with cargo build --release --features="winit glium libc"
 
-*Probably won't compile at all at the moment, because a customised version of conrod is used. Working on fix.*
+*Update 2018-10-24: Now builds on travis without doing silly things to conrod.*
 
 Feedback
 --------
