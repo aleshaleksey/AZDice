@@ -11,22 +11,23 @@ use conrod::color;
 use conrod::cursor;
 use conrod::UiCell;
 use conrod::widget;
+//use conrod::widget::button::Interaction;
 
 use std;
 
-#[allow(dead_code)]
-fn interaction_and_times_triggered(button_id: widget::Id, ui: &UiCell) -> (widget::button::Interaction, u16) {
-    let input = ui.widget_input(button_id);
-    let interaction = input.mouse().map_or(widget::button::Interaction::Idle, |mouse| {
-        let is_pressed =
-            mouse.buttons.left().is_down()
-            || ui.global_input().current.touch.values()
-                 .any(|t| t.start.widget == Some(button_id));
-        if is_pressed { widget::button::Interaction::Press } else { widget::button::Interaction::Hover }
-    });
-    let times_triggered = (input.clicks().left().count() + input.taps().count()) as u16;
-    (interaction, times_triggered)
-}
+//#[allow(dead_code)]
+//fn interaction_and_times_triggered(button_id: widget::Id, ui: &UiCell) -> (Interaction, u16) {
+    //let input = ui.widget_input(button_id);
+    //let interaction = input.mouse().map_or(Interaction::Idle, |mouse| {
+        //let is_pressed =
+            //mouse.buttons.left().is_down()
+            //|| ui.global_input().current.touch.values()
+                 //.any(|t| t.start.widget == Some(button_id));
+        //if is_pressed { Interaction::Press } else { Interaction::Hover }
+    //});
+    //let times_triggered = (input.clicks().left().count() + input.taps().count()) as u16;
+    //(interaction, times_triggered)
+//}
 
 pub struct EventLoop {
     ui_needs_update: bool,
