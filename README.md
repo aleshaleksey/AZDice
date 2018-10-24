@@ -1,4 +1,4 @@
-AZDice
+AZDice [<img src="https://api.travis-ci.org/aleshaleksey/AZDice.svg?branch=master">](https://travis-ci.org/aleshaleksey/AZDice)
 ======
 
 A GUI tool for generating and visualising dice roll probability distributions.
