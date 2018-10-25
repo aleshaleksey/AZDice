@@ -1,6 +1,9 @@
+os:
+  -windows
+  -osx
+  -linux
 language: rust
 cache: cargo
-sudo: false
 branches: master
 git:
   depth: 1
@@ -11,7 +14,3 @@ before_script:
 - cargo update
 script:
 - cargo build --release --features="libc glium winit" --verbose --all
-matrix:
-  os:-windows
-  os:-linux
-  os:-osx
