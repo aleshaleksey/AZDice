@@ -2,7 +2,9 @@ language: rust
 cache: cargo
 sudo: false
 branches: master
-os: -linux
+os:
+  -linux
+  -windows
 git:
   depth: 1
 rust:
