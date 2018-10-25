@@ -5,6 +5,7 @@ branches: master
 os:
   -linux
   -windows
+  -osx
 git:
   depth: 1
 rust:
