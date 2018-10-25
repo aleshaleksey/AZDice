@@ -1,19 +1,14 @@
-
-os:
-    -linux
-    -windows
-    -osx
-sudo: true
 language: rust
-#cache: cargo
+cache: cargo
+sudo: false
 branches: master
+os: -linux
 git:
-    depth: 1
+  depth: 1
 rust:
-    1.28.0
+  - 1.28.0
 name: "azdice-conrod"
-#before_script:
-#    -cargo update
+before_script:
+- cargo update
 script:
-    -cargo build --release --features="libc glium winit" --verbose --all
-  
+- cargo build --release --features="libc glium winit" --verbose --all
