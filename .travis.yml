@@ -3,8 +3,9 @@ os:
     -linux
     -windows
     -osx
+sudo: true
 language: rust
-cache: cargo
+#cache: cargo
 branches: master
 git:
     depth: 1
