@@ -1,3 +1,7 @@
+
+os:-linux
+os:-windows
+os:-osx
 language: rust
 cache: cargo
 branches: master
@@ -6,7 +10,4 @@ rust:1.28.0
 name: "azdice-conrod"
 before_script:-cargo update
 script:-cargo build --release --features="libc glium winit" --verbose --all
-os:-linux
-os:-windows
-os:-osx
   
