@@ -6,11 +6,7 @@ rust:1.28.0
 name: "azdice-conrod"
 before_script:-cargo update
 script:-cargo build --release --features="libc glium winit" --verbose --all
-
-
-matrix:
-  include:
-    -os:linux
-    -os:windows
-    -os:osx
+os:-linux
+os:-windows
+os:-osx
   
