@@ -6,9 +6,13 @@ os:
 language: rust
 cache: cargo
 branches: master
-git:depth: 1
-rust:1.28.0
+git:
+    depth: 1
+rust:
+    -1.28.0
 name: "azdice-conrod"
-before_script:-cargo update
-script:-cargo build --release --features="libc glium winit" --verbose --all
+before_script:
+    -cargo update
+script:
+    -cargo build --release --features="libc glium winit" --verbose --all
   
