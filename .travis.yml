@@ -1,7 +1,8 @@
 
-os:-linux
-os:-windows
-os:-osx
+os:
+    -linux
+    -windows
+    -osx
 language: rust
 cache: cargo
 branches: master
