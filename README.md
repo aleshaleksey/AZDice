@@ -36,8 +36,8 @@ Currently rolls virtual dice (using rand crate) lots of times. Then compares the
 
 ***ToDo***
 
--Make the graph point tracker more efficient for stupidly large numbers of data points (over 10K) (ie not linear).
 -Figure out a sensible way of displaying a graph in the terminal in the cli version.
+-Make loader for csv files containing valid 2-column data.
 
 Compiling
 ---------
