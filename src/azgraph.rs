@@ -173,6 +173,7 @@ pub fn set_xy_line_graph(ui: &mut UiCell,ids:&Ids,
 
 //A function to snap x to x-axis or y to y-axis, or both to line.
 //Currently this function is heavy, requiring 8 boolian comparisons per point of data.
+//It also requires iterating through all points of data. I will need to make a more efficient iterator.
 fn get_nearest(xy:&mut [f64;2],lic:&Vec<[f64;2]>,xid:Id,yid:Id,ui:&conrod::UiCell,mmx:[f64;2],mmy:[f64;2]) {
 	let coord_x = ui.xy_of(xid).unwrap()[1]; //We only care about y-pos of x-axis.
 	let coord_y = ui.xy_of(yid).unwrap()[0]; //We only care about x-pos of y-axis.

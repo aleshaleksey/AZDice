@@ -339,13 +339,48 @@ fn lab_no_chooser(wh_gr: &[f64;2]) -> usize {
 
 //Convert data to a format the graph drawer will take.
 //NB it should be noted that initial data was (y,x), while it must become [x,y].
+//NB2: This function will omit data points if there are too many.
 fn convert_data_marker(){}
 fn convert_data(data:&(String,Vec<(i32,f64)>),index:usize) -> Option<(String,Vec<[f64;2]>,usize)> {
-	let mut output_data:Vec<[f64;2]> = Vec::with_capacity(data.1.len());
+	let mut output_data:Vec<[f64;2]> = Vec::with_capacity(2000);
 	
-	for (i,f) in data.1.iter() {output_data.push([*i as f64,*f])};
-	Some((data.0.clone(),output_data,index))
+	if data.1.len()<2001 {
+		//If data set is short use all the data.
+		for (i,f) in data.1.iter() {output_data.push([*i as f64,*f])};
+		return Some((data.0.clone(),output_data,index))
+	}else{
+		//If data set is long, average several results at a time.
+		let interval = data.1.len() as f64/2000.0;
+		
+		output_data.push([data.1[0].0 as f64,data.1[0].1]);
+		for i in 1..2000 {
+			let i_1f64 = (i-1) as f64;
+			let if64 = i as f64;
+			let p_1 = (i_1f64*interval) as usize;
+			let p = (if64*interval) as usize;
+			
+			//An averageing scheme that means that all datapoints contribute.
+			if p-p_1<2 {
+				output_data.push([data.1[p].0 as f64,data.1[p].1]);
+			}else{
+				output_data.push(mean_i32f64(&data.1[p_1..p]));
+			};
+		};
+		return Some((data.0.clone(),output_data,index))
+	}
 	
+}
+
+//Special mean for &[i32,f64)]
+fn mean_i32f64(input:&[(i32,f64)])->[f64;2] {
+	
+	let mut x = [0.0;2];
+	for (i,f) in input.iter() {
+		x[0]+= *i as f64;
+		x[1]+= *f as f64;
+	};
+	
+	[x[0]/input.len() as f64,x[1]/input.len() as f64]
 }
 
 //wrapper around clipboard copying.
