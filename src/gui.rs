@@ -7,6 +7,7 @@ extern crate rand;
 extern crate clipboard;
 
 use azgraph;
+use libdice;
 
 use conrod::UiCell;
 use conrod::{color, widget, Borderable, Colorable, Labelable, Positionable, Sizeable, Widget};
@@ -16,9 +17,11 @@ use conrod::widget::Id;
 
 use rand::Rng;
 use std::env;
-use std::fs::{File,OpenOptions};
+use std::ffi::OsStr;
+use std::fs::{self,File,OpenOptions};
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Component, PathBuf};
+
 
 
 //Numeric constant storage size.
@@ -41,6 +44,7 @@ pub const TEXTBOX_COLOUR:color::Colour = color::WHITE;
 pub const BUTTON_COLOUR:color::Colour = color::LIGHT_GREY;
 pub const REPS_DEFAULT:usize = 20000;
 const AXIS_THICKNESS:f64 = 3.0;
+const MENU_BUTTONS:usize = 2;
 
 //let m = ui.global_input().current.mouse.xy; useful for later.
 //Another useful function: 
@@ -54,10 +58,13 @@ const AXIS_THICKNESS:f64 = 3.0;
 //A persistent structure, that keeps track of things.
 pub struct Flow {
 	pub init:bool,
+	pub load: bool,
+	pub menu: bool,
 	pub input: String,
 	pub reps:usize,
 	pub data:Vec<(String,Vec<(i32,f64)>)>,
 	pub active_data:Option<(String,Vec<[f64;2]>,usize)>,
+	pub browser_dir: PathBuf,
 	pub axes: [String;2],
 	pub rep_box: (String,bool),
 	pub roll_box: (String,bool),
@@ -70,10 +77,13 @@ impl Flow {
 	pub fn new()->Flow {
 		Flow {
 			init: false,
+			load: false,
+			menu: false,
 			input: String::with_capacity(60),
 			reps: REPS_DEFAULT,
 			data: Vec::with_capacity(20),
 			active_data: None,
+			browser_dir: PathBuf::from(Component::CurDir.as_os_str()),
 			axes: ["Bonus (Points)".to_owned(),"% Success".to_owned()],
 			rep_box: (REP_BOX.to_owned(),false),
 			roll_box: (ROLL_BOX.to_owned(),false),
@@ -89,7 +99,17 @@ widget_ids!(
 			intro_canvas,
 				intro_text,
 			
-			intro_button,
+			menu_button,
+			menu,
+				intro_button,
+				load_button,
+				
+			browser_canvas,
+				browser_dir_text,
+				browser,
+				cancel_button,
+				back_button,
+				select_button,
 				
 			calculating_canvas,
 				calculating_text,
@@ -124,24 +144,28 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 	let ui_wh = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
 	widget::Canvas::new().color(BACKGR_COLOUR).set(ids.master,ui);
 	
-	for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
-							.label(HELP_BUTTON)
-							.border(BORDER_WIDTH)
-							.top_left_with_margin_on(ids.master,HOR_MAR_BOX)
-							.set(ids.intro_button,ui){
-		flow.init = true;
-	};
-	
 	if flow.init {
 		//If help is called for set the help canvas.
 		set_intro_canvas(ui,ids,flow);
 	}else{
+		//Set menu button which sets main menu.
+		for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
+							.label(MENU_BUTTON)
+							.border(BORDER_WIDTH)
+							.border_color(BORDER_COLOUR)
+							.top_left_with_margin_on(ids.master,HOR_MAR_BOX)
+							.set(ids.menu_button,ui){
+			flow.menu = !flow.menu;
+			//NB. Menu must appear on top so set it last.
+		};
+
+		
 		//Set the reps box.
 		for edit in widget::TextBox::new(&flow.rep_box.0).w(REP_BOX_W-HOR_MAR_BOX)
 												.h(TEXT_BOX_H)
 												.color(TEXTBOX_COLOUR)
 												.text_color(color::BLACK)
-												.right_from(ids.intro_button,HOR_MAR_BOX)
+												.right_from(ids.menu_button,HOR_MAR_BOX)
 												.set(ids.reps_input,ui) {
 			match edit {
 				conrod::widget::text_box::Event::Update(x)	=> {flow.rep_box.0 = x;},
@@ -173,7 +197,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			widget::Canvas::new()
 				.w(ROLL_BOX_W-HOR_MAR_BOX)
 				.h(ui_wh[1]-REP_BOX_W-VER_MAR_BOX*3.0)
-				.down_from(ids.intro_button,VER_MAR_BOX)
+				.down_from(ids.menu_button,VER_MAR_BOX)
 				.scroll_kids_vertically()
 				.color(BACKGR_COLOUR)
 				.border(BORDER_WIDTH)
@@ -229,6 +253,43 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			if deactivate {flow.active_data = None;};
 		};
 		
+		//menu
+		if flow.menu {
+			//Set the menu
+			set_main_menu(ui,ids,MENU_BUTTONS,[REP_BOX_W,TEXT_BOX_H+BORDER_WIDTH],ids.menu_button,ids.menu);
+			
+			//Set help button.
+			for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
+									.label(HELP_BUTTON)
+									.top_left_with_margin_on(ids.menu,BORDER_WIDTH)
+									.set(ids.intro_button,ui){
+				flow.init = true;
+				flow.menu = false;
+			};
+			
+			//Set load data button.
+			for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
+									.label(LOAD_BUTTON)
+									.down_from(ids.intro_button,HOR_MAR)
+									.set(ids.load_button,ui){
+				flow.load = true;
+				flow.menu = false;
+			};
+			
+			//Hide menu if our mouse loses interest.
+			//I wonder if there's a better way of doing this.
+			if ui.widget_input(ids.menu).mouse().is_none()
+			& ui.widget_input(ids.menu_button).mouse().is_none()
+			& ui.widget_input(ids.load_button).mouse().is_none()
+			& ui.widget_input(ids.intro_button).mouse().is_none(){
+				flow.menu = false;
+			};
+		};
+		
+		if flow.load {
+			set_file_browser(ui,ids,flow);
+		};
+		
 		//If calculating, set calculating canvas.
 		if flow.calculating {
 			set_cold_and_calculating_canvas(ui,ids);
@@ -236,6 +297,19 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			set_cold_and_miscalculating_canvas(ui,ids,flow);
 		};
 	};
+}
+
+//Set the main menu (a canvas with two buttons).
+fn set_main_menu_marker(){}
+fn set_main_menu(ui: &mut UiCell, ids:&Ids,len:usize,button_max_size:[f64;2],parent_id:Id,self_id:Id) {
+	
+	widget::Canvas::new().w(button_max_size[0])
+						 .h(button_max_size[1]*len as f64)
+						 .down_from(parent_id,0.0)
+						 .color(BACKGR_COLOUR)
+						 .border(BORDER_WIDTH)
+						 .border_color(BORDER_COLOUR)
+						 .set(self_id,ui);
 }
 
 //Set the canvas that says that it's calculating.
@@ -383,11 +457,115 @@ fn mean_i32f64(input:&[(i32,f64)])->[f64;2] {
 	[x[0]/input.len() as f64,x[1]/input.len() as f64]
 }
 
+
 //wrapper around clipboard copying.
 pub fn copy_to_clipboard(text:&str){
 	use clipboard::ClipboardProvider;
 	let mut clipboard:clipboard::ClipboardContext = ClipboardProvider::new().unwrap();
 	clipboard.set_contents(text.to_owned());
+}
+
+
+// Function for browsing files and returning them
+// to config file and songlist file.
+// NB this function should ONLY be triggered if ipath.is_some()
+// Or the world will end.
+// the browser now works
+fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
+					 flow: &mut Flow) {
+	
+	
+	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
+	
+	widget::Canvas::new().w(ui_wh[0]/2.0).h(ui_wh[1]/2.0)
+				 .middle_of(ids.master)
+				 .color(BACKGR_COLOUR)
+				 .border(BORDER_WIDTH)
+				 .border_color(BORDER_COLOUR)
+				 .set(ids.browser_canvas,ui);
+	
+	let mut sap = ui.wh_of(ids.browser_canvas).unwrap();			 
+			
+	
+	//set move out of folder. NB, this will crash in windows. (Not any more)
+	for _click in widget::Button::new().color(BUTTON_COLOUR)
+									   .w(REP_BOX_W)
+									   .h(TEXT_BOX_H)
+									   .label("Cancel")
+									   .bottom_right_with_margin_on(ids.browser_canvas,HOR_MAR_BOX)
+									   .set(ids.cancel_button,ui) {
+		flow.load = false;		
+	};
+	
+	//set move out of folder.
+	for _click in widget::Button::new().color(BUTTON_COLOUR)
+									   .w(REP_BOX_W)
+									   .h(TEXT_BOX_H)
+									   .label("Up")
+									   .left_from(ids.cancel_button,0.0)
+									   .set(ids.back_button,ui) {
+		match flow.browser_dir.has_root() {
+			false => {flow.browser_dir = PathBuf::from(Component::RootDir.as_os_str())},
+			true  => {flow.browser_dir =
+				match flow.browser_dir.parent() {
+					Some(dad) => dad.to_owned(),
+					_		  => PathBuf::from(Component::RootDir.as_os_str()),
+				}},
+		};					   
+	};
+	
+	//Make text to display current root directory.
+	let path = format!("Current Path: {}",flow.browser_dir.as_os_str().to_str().unwrap_or("unknown"));
+	widget::Text::new(&path).color(BORDER_COLOUR)
+						    .top_left_with_margin_on(ids.browser_canvas,BORDER_WIDTH)
+						    .set(ids.browser_dir_text,ui);
+	
+	//set file browser onto appropriate canvas.
+	for event in widget::FileNavigator::with_extension(&flow.browser_dir, &["csv"])
+                .color(BACKGR_COLOUR)
+                .font_size(font_size_chooser(&ui_wh))
+                .w(sap[0]-BORDER_WIDTH)
+                .h(sap[1]*0.75-BORDER_WIDTH)
+                .down_from(ids.browser_dir_text,HOR_MAR_BOX)
+                .set(ids.browser, ui) {
+		
+		// If a double click is made on an entry either:
+		// a) Go to this dir if it's a dir.
+		// b) try open the file if it's a file.
+		//The world's least elegant way of getting things done.
+		match event {
+			widget::file_navigator::Event::DoubleClick(_,x) =>  {
+				if x.len()>0 {
+					if x[0].is_dir() {
+						//If we have a dir, put it as current dir.
+						flow.browser_dir = x[0].clone();
+					}else{
+						//If not a dir try to open each file in selection if csv.
+						//If file contains valid data, add to data.
+						for entry in x.iter() {
+							if entry.extension()==Some(OsStr::new("csv")) {
+								let name:String = entry.file_stem().unwrap_or(OsStr::new("Unknown roll")).to_str().unwrap().to_owned();
+								match File::open(entry) {
+									Ok(file) => {
+										match libdice::parse_azdice_csv_cont(file) {
+											Some(data) => {
+												flow.data.push((name,data));
+												
+											},
+											_	=> {},
+										};
+									},
+									_ => {},
+								};
+							};
+						};
+					};
+				};
+			},
+			_	=> {},		
+		};
+	};
+	
 }
 	
 
@@ -395,6 +573,8 @@ pub fn copy_to_clipboard(text:&str){
 
 const DELETE_ACTIVE:&str = "Delete Active Dataset";
 const HELP_BUTTON:&str = "Help";
+const LOAD_BUTTON:&str = "Load Data";
+const MENU_BUTTON:&str = "Menu";
 const REP_BOX:&str = "Input repeats";
 pub const ROLL_BOX:&str = "Input roll";
 const COLD_AND_CALCULATING:&str = "Calculating distribution by rolling lots of virtual dice. This may take some time.";

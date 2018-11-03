@@ -5,6 +5,8 @@ extern crate rand;
 use rand::Rng;
 use std::fs;
 use std::io::Write;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::num;
 
 //Function to parse input and generate 
@@ -269,6 +271,56 @@ fn calculate_minmax(dice:&[Vec<(i32,i32)>;2])->i32 {
 	let a = max_1-min_0;
 	let b = max_0-min_1;
 	if a>b {a}else{b}
+}
+
+//A function to parse input file into an internal azdice object.
+pub fn parse_azdice_csv_cont(csv: fs::File) -> Option<Vec<(i32,f64)>> {
+	
+	//Initiate output and split input.
+	let mut output_vec:Vec<(i32,f64)> = Vec::with_capacity(10000);
+	let mut csv = BufReader::new(&csv);
+	let mut temp_text = String::with_capacity(500);
+	
+	//Skip the first line of the input (it contains the column names)
+	let mut count = csv.read_line(&mut temp_text).unwrap_or(0);
+	
+	//Cycle through the remaining lines, line by line.
+	while count>0 {
+		let mut temp_text = String::with_capacity(500);
+		count = csv.read_line(&mut temp_text).unwrap_or(0);
+		//Split into cells.
+		let y = temp_text.split(',').collect::<Vec<&str>>();
+		println!("{:?}",temp_text);
+		
+		//Operate
+		if (y.len()==2) {
+			//if it has two columns, try to process them and add to vector.
+			//if they can't be parsed, the data is corrupted and we shouldn't try.
+			let adv:i32 = match y[0].trim().parse() {
+				Ok(num) => {num},
+				_		=> {
+					println!("Could not parse line: \"{}\"",temp_text);
+					return None
+				},
+			};
+			let succ:f64 = match y[1].trim().parse::<f64>() {
+				Ok(num) => {num},
+				_		=> {
+					println!("Could not parse line: \"{}\"",temp_text);
+					return None
+				},
+			};
+			output_vec.push((adv,succ));
+		}else if temp_text.len()==0 {
+		}else{
+			//If not two columns then this is not the right type of file, and we should stop trying to work with it.
+			println!("More (or less) than 2 entries per line found. This is not an AZDice file.");
+			println!("Here is the offending passage: {:?}",temp_text);
+			return None
+		};
+	}
+	
+	Some(output_vec)
 }
 
 //Help blurb to print if one of the args==["--help"].

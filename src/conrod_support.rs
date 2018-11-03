@@ -9,8 +9,8 @@ use conrod::event::Input;
 use conrod::input;
 use conrod::color;
 use conrod::cursor;
-use conrod::UiCell;
-use conrod::widget;
+//use conrod::UiCell;
+//use conrod::widget;
 //use conrod::widget::button::Interaction;
 
 use std;

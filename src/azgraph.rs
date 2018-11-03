@@ -193,8 +193,8 @@ fn get_nearest(xy:&mut [f64;2],lic:&Vec<[f64;2]>,xid:Id,yid:Id,ui:&conrod::UiCel
 	if xy[0]>mmx[1] {nearest_x = [mmx[1],mmy[1]];};
 	if xy[1]>mmy[1] {nearest_y = [mmx[1],mmy[1]];};
 	
-	if	nearest_y[0]>=xy[0] {xy[0] = nearest_y[0];
-	}else{xy[1] = nearest_x[1];};
+	if	nearest_y[0]>=xy[0] {*xy = nearest_y;
+	}else{*xy = nearest_x;};
 }
 
 

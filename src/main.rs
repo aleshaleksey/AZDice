@@ -5,7 +5,7 @@
 #![allow(non_snake_case)]
 #![recursion_limit="512"]
 
-/// The azdice which is based
+
 
 //Compile command:
 //  cargo rustc --bin azdice-conrod --release --target=x86_64-pc-windows-gnu --features="winit glium libc" -- -C linker=x86_64-w64-mingw32-gcc -C link-args="-Wl,--subsystem,windows"
