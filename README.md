@@ -36,8 +36,7 @@ Currently rolls virtual dice (using rand crate) lots of times. Then compares the
 
 ***ToDo***
 
--Figure out a sensible way of displaying a graph in the terminal in the cli version.
--Make loader for csv files containing valid 2-column data.
+-Make an algebraic calculator to supplement the brute force statistical calculator.
 
 Compiling
 ---------
