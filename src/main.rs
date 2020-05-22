@@ -4,7 +4,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![recursion_limit="512"]
-
+#![allow(deprecated)]
 
 
 //Compile command:
@@ -18,8 +18,9 @@ extern crate find_folder;
 extern crate num;
 extern crate rand;
 extern crate clipboard;
+extern crate libazdice;
 
-mod libdice;
+mod dice;
 mod gui;
 mod conrod_support;
 mod azgraph;
@@ -54,7 +55,7 @@ const F_SIZE:i32 = -15;
 
 
 
-fn main(){						
+fn main(){
 // Build the window.
 	println!("A");
 	let mut events_loop = glium::glutin::EventsLoop::new();
@@ -98,27 +99,28 @@ fn main(){
 	// Poll events from the window.
 	let mut event_loop = conrod_support::EventLoop::new();
 	println!("event_loop done");
-	
+
 	//Initiate persistent flow controller.
 	let mut flow_controller = Flow::new();
 	//a mini controller to say what Ctrl+C does.
 	let mut copy_status:(u8,Option<conrod::widget::Id>) = (0,None);
-	
+
 	//Make the sender to for sending the calculation.
 	let (sender_to_brain,receiver_in_brain)
 	:(SyncSender<(usize,String)>,Receiver<(usize,String)>)
 	= sync_channel(1);
-	
+
 	let (sender_to_body,receiver_in_body)
 	:(SyncSender<Option<(String,Vec<(i32,f64)>)>>,Receiver<Option<(String,Vec<(i32,f64)>)>>)
 	= sync_channel(1);
-	
+
 	let brain_thread = thread::spawn(
 		move||{
+			#[allow(unused_labels)]
 			'brain_loop: loop {
 				match receiver_in_brain.try_recv() {
 					Ok(x) => {
-						let output = libdice::parse_input(&x.1,x.0);
+						let output = dice::parse_input(&x.1,x.0);
 						sender_to_body.send(output);
 					},
 					_	  => {thread::sleep(Duration::from_millis(200));},
@@ -126,16 +128,16 @@ fn main(){
 			};
 		}
 	);
-	
+
 	'main: loop {
-		
+
 		//Talking to the brain.
 		if flow_controller.roll_box.1 & !flow_controller.calculating {
 			//If submission made to brain, turn on indicator and send request to brain.
 			flow_controller.calculating = true;
 			sender_to_brain.send((flow_controller.reps,flow_controller.roll_box.0.clone()));
 			flow_controller.roll_box.0 = gui::ROLL_BOX.to_owned();
-			
+
 		}else if flow_controller.calculating {
 			//If indicator on, try to beat answer out of the brain.
 			match receiver_in_body.try_recv() {
@@ -150,10 +152,10 @@ fn main(){
 					};
 				},
 				_	  => {},
-				
-			}; 
+
+			};
 		};
-		
+
 		// Instantiate all widgets in the GUI.
 		set_widgets(ui.set_widgets(), ids,&mut flow_controller);
 
@@ -165,7 +167,7 @@ fn main(){
 			renderer.draw(&mut display, &mut target, &mut image_map,1.0,1.0).unwrap();
 			target.finish().unwrap();
 		}
-		
+
 		// Handle all events.
 		for event in event_loop.next(&mut events_loop) {
 
@@ -177,7 +179,7 @@ fn main(){
 
 			match event {
 				glium::glutin::Event::WindowEvent { event, .. } => match event {
-					
+
 					// Break from the loop upon `Escape`.
 					glium::glutin::WindowEvent::Closed |
 					glium::glutin::WindowEvent::KeyboardInput {
@@ -187,7 +189,7 @@ fn main(){
 						},
 						..
 					} => break 'main,
-					
+
 					//Controlbutton.
 					glium::glutin::WindowEvent::KeyboardInput {
 						input: glium::glutin::KeyboardInput {
@@ -205,7 +207,7 @@ fn main(){
 					} => {
 						//Ctrl+C, Ctrl+V script.
 					},
-					
+
 					//C button.
 					glium::glutin::WindowEvent::KeyboardInput {
 						input: glium::glutin::KeyboardInput {
@@ -219,7 +221,7 @@ fn main(){
 				_ => (),
 			}
 		}
-		
+
 		//brain_thread.join();
 		//Copy by buttons.
 		//Use this function:
@@ -227,8 +229,8 @@ fn main(){
 
 	}
 }
-			
-   
+
+
 
 
 fn lshas(a:String, b:char)->bool{

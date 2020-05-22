@@ -1,6 +1,6 @@
 [package]
 name = "azdice-conrod"
-version = "0.0.1"
+version = "0.2.0"
 authors = ["Aleksey Zholobenko"]
 
 [dependencies]
@@ -9,9 +9,11 @@ conrod = "=0.57.0"
 glium = { version = "=0.20", optional = true }
 winit = { version = "=0.10", optional = true }
 num= "0.1"
-libc= {version ="=0.2.34",optional= true}
+libc= {version ="=0.2.34", optional= true}
 find_folder= "0.3.0"
 clipboard = "=0.5.0"
+libazdice = { git = "https://github.com/aleshaleksey/libazdice.git", version = "0.2.2" }
+# libazdice = { path = "../libazdice" }
 
 [profile.release]
 opt-level = 3
@@ -28,5 +30,7 @@ debug = false
 rpath = false
 lto = false
 debug-assertions = false
-codegen-units = 2
 panic = 'abort'
+
+[features]
+default = ["winit", "glium", "libc"]

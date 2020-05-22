@@ -7,7 +7,7 @@ extern crate rand;
 extern crate clipboard;
 
 use azgraph;
-use libdice;
+use dice;
 
 use conrod::UiCell;
 use conrod::{color, widget, Borderable, Colorable, Labelable, Positionable, Sizeable, Widget};
@@ -47,7 +47,7 @@ const AXIS_THICKNESS:f64 = 3.0;
 const MENU_BUTTONS:usize = 2;
 
 //let m = ui.global_input().current.mouse.xy; useful for later.
-//Another useful function: 
+//Another useful function:
 //parse_input(input:&str,title:&mut String,data:&mut Vec<(i32,f64)>,reps:&mut usize){}
 //A variant of this will be indispensible:
 //Switch of the displayed dungeon is needed.
@@ -70,7 +70,7 @@ pub struct Flow {
 	pub roll_box: (String,bool),
 	pub calculating: bool,
 	pub miscalculation: bool,
-	
+
 }
 
 impl Flow {
@@ -98,30 +98,30 @@ widget_ids!(
 		master,
 			intro_canvas,
 				intro_text,
-			
+
 			menu_button,
 			menu,
 				intro_button,
 				load_button,
-				
+
 			browser_canvas,
 				browser_dir_text,
 				browser,
 				cancel_button,
 				back_button,
 				select_button,
-				
+
 			calculating_canvas,
 				calculating_text,
-				
+
 			reps_input,
 			roll_input,
 			coord_highlighted,
-			
+
 			data_canvas,
 				datasets_matrix,
 			remove_active_dataset_button,
-			
+
 			graph_canvas,
 				title,
 				x_axis,
@@ -134,7 +134,7 @@ widget_ids!(
 				x_pointer,
 				y_pointer,
 				coord_box,
-					coord_text,	
+					coord_text,
 	}
 );
 
@@ -143,7 +143,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 	//Set the main canvas.
 	let ui_wh = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
 	widget::Canvas::new().color(BACKGR_COLOUR).set(ids.master,ui);
-	
+
 	if flow.init {
 		//If help is called for set the help canvas.
 		set_intro_canvas(ui,ids,flow);
@@ -159,7 +159,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 			//NB. Menu must appear on top so set it last.
 		};
 
-		
+
 		//Set the reps box.
 		for edit in widget::TextBox::new(&flow.rep_box.0).w(REP_BOX_W-HOR_MAR_BOX)
 												.h(TEXT_BOX_H)
@@ -175,7 +175,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				},
 			};
 		}
-		
+
 		//Set the roll entry box.
 		for edit in widget::TextBox::new(&flow.roll_box.0).w(ROLL_BOX_W-VER_MAR_BOX)
 												.h(TEXT_BOX_H)
@@ -190,10 +190,10 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				},
 			};
 		}
-		
+
 		//if there is data, set the data selector matrix and graph.
 		if flow.data.len()>0 {
-			
+
 			widget::Canvas::new()
 				.w(ROLL_BOX_W-HOR_MAR_BOX)
 				.h(ui_wh[1]-REP_BOX_W-VER_MAR_BOX*3.0)
@@ -202,29 +202,29 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				.color(BACKGR_COLOUR)
 				.border(BORDER_WIDTH)
 				.set(ids.data_canvas,ui);
-			
+
 			let mut dataset_matrix =  widget::Matrix::new(1,flow.data.len())
 				.padded_w_of(ids.data_canvas,1.0)
 				.h(TEXT_BOX_H*flow.data.len() as f64)
 				.mid_top_with_margin_on(ids.data_canvas,1.0)
 				.set(ids.datasets_matrix,ui);
-				
+
 			let mut button = gen_button(ui,ids,[ROLL_BOX_W-VER_MAR_BOX,TEXT_BOX_H]);
-						   
+
 			while let Some(db) = dataset_matrix.next(ui) {
 				let r = db.row as usize;
 				for _click in db.set(button.clone().label(&flow.data[r].0),ui) {
 					flow.active_data = convert_data(&flow.data[r],r);
 				};
 			};
-			
+
 			//Draw the graph if we have some active data.
 			let mut deactivate = false;
 			match flow.active_data {
 				Some((ref t,ref d, index)) => {
 					let mut wh_graph = ui.wh_of(ids.data_canvas).unwrap();
 					wh_graph[0] = ui_wh[0]-wh_graph[0]-HOR_MAR_BOX*3.0;
-					
+
 					let coord_out:String = azgraph::set_xy_line_graph(ui,ids,
 													 d,
 													 &flow.axes,
@@ -234,11 +234,11 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 													 lab_no_chooser(&wh_graph),
 													 (ids.data_canvas,'r')
 					);
-					
+
 					widget::Text::new(&coord_out)
 						.down_from(ids.graph_canvas,HOR_MAR_BOX)
 						.set(ids.coord_highlighted,ui);
-						
+
 					for _click in button.clone().label(DELETE_ACTIVE)
 												.border(BORDER_WIDTH)
 												.down_from(ids.data_canvas,HOR_MAR_BOX)
@@ -246,18 +246,18 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 						flow.data.remove(index);
 						deactivate = true;
 					};
-					
+
 				},
 				_		=> {},
 			};
 			if deactivate {flow.active_data = None;};
 		};
-		
+
 		//menu
 		if flow.menu {
 			//Set the menu
 			set_main_menu(ui,ids,MENU_BUTTONS,[REP_BOX_W,TEXT_BOX_H+BORDER_WIDTH],ids.menu_button,ids.menu);
-			
+
 			//Set help button.
 			for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
 									.label(HELP_BUTTON)
@@ -266,7 +266,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				flow.init = true;
 				flow.menu = false;
 			};
-			
+
 			//Set load data button.
 			for _click in gen_button(ui,ids,[REP_BOX_W-HOR_MAR_BOX,TEXT_BOX_H])
 									.label(LOAD_BUTTON)
@@ -275,7 +275,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				flow.load = true;
 				flow.menu = false;
 			};
-			
+
 			//Hide menu if our mouse loses interest.
 			//I wonder if there's a better way of doing this.
 			if ui.widget_input(ids.menu).mouse().is_none()
@@ -285,11 +285,11 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 				flow.menu = false;
 			};
 		};
-		
+
 		if flow.load {
 			set_file_browser(ui,ids,flow);
 		};
-		
+
 		//If calculating, set calculating canvas.
 		if flow.calculating {
 			set_cold_and_calculating_canvas(ui,ids);
@@ -302,7 +302,7 @@ pub fn set_widgets(ref mut ui: UiCell,ids:&Ids,flow:&mut Flow) {
 //Set the main menu (a canvas with two buttons).
 fn set_main_menu_marker(){}
 fn set_main_menu(ui: &mut UiCell, ids:&Ids,len:usize,button_max_size:[f64;2],parent_id:Id,self_id:Id) {
-	
+
 	widget::Canvas::new().w(button_max_size[0])
 						 .h(button_max_size[1]*len as f64)
 						 .down_from(parent_id,0.0)
@@ -315,14 +315,14 @@ fn set_main_menu(ui: &mut UiCell, ids:&Ids,len:usize,button_max_size:[f64;2],par
 //Set the canvas that says that it's calculating.
 fn set_cold_and_calculating_canvas(ui: &mut UiCell, ids: &Ids) {
 	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
-	
+
 	widget::Canvas::new().wh([ui_wh[0]/2.0,ui_wh[1]/2.0])
 				 .middle_of(ids.master)
 				 .color(BACKGR_COLOUR_CALC)
 				 .border(BORDER_WIDTH)
 				 .border_color(BORDER_COLOUR)
 				 .set(ids.calculating_canvas,ui);
-	
+
 	widget::Text::new(COLD_AND_CALCULATING)
 		.font_size(font_size_chooser(&ui_wh))
 		.middle_of(ids.calculating_canvas)
@@ -333,20 +333,20 @@ fn set_cold_and_calculating_canvas(ui: &mut UiCell, ids: &Ids) {
 //Set the canvas that says that it's made a pig's dinner out of the calculation.
 fn set_cold_and_miscalculating_canvas(ui: &mut UiCell, ids: &Ids, flow: &mut Flow) {
 	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
-	
+
 	widget::Canvas::new().wh([ui_wh[0]/2.0,ui_wh[1]/2.0])
 				 .middle_of(ids.master)
 				 .color(BACKGR_COLOUR_MISCALC)
 				 .border(BORDER_WIDTH)
 				 .border_color(BORDER_COLOUR)
 				 .set(ids.calculating_canvas,ui);
-	
+
 	widget::Text::new(COLD_AND_MISCALCULATING)
 		.font_size(font_size_chooser(&ui_wh))
 		.middle_of(ids.calculating_canvas)
 		.padded_w_of(ids.calculating_canvas,4.0)
 		.set(ids.calculating_text,ui);
-		
+
 	for _ in ui.widget_input(ids.calculating_canvas).clicks() {
 		flow.miscalculation = false;
 	};
@@ -359,24 +359,24 @@ fn set_cold_and_miscalculating_canvas(ui: &mut UiCell, ids: &Ids, flow: &mut Flo
 //Set the help canvas.
 fn set_intro_canvas(ui: &mut UiCell, ids: &Ids, flow: &mut Flow) {
 	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
-	
+
 	widget::Canvas::new().wh(ui_wh)
 				 .middle_of(ids.master)
 				 .color(BACKGR_COLOUR)
 				 .border(BORDER_WIDTH)
 				 .border_color(BORDER_COLOUR)
 				 .set(ids.intro_canvas,ui);
-				 
+
 	widget::Text::new(HELP)
 		.font_size(font_size_chooser(&ui_wh))
 		.middle_of(ids.intro_canvas)
 		.padded_w_of(ids.intro_canvas,4.0)
 		.set(ids.intro_text,ui);
-	
+
 	for _ in ui.widget_input(ids.intro_text).clicks() {
 		flow.init = false;
 	};
-	
+
 	for _ in ui.widget_input(ids.intro_canvas).clicks() {
 		flow.init = false;
 	};
@@ -384,9 +384,9 @@ fn set_intro_canvas(ui: &mut UiCell, ids: &Ids, flow: &mut Flow) {
 
 fn gen_button_marker(){}
 fn gen_button<'a>(ui: &mut UiCell, ids: &Ids,wh:[f64;2])->widget::Button<'a,Flat> {
-	
+
 	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
-	
+
 	widget::Button::new().wh(wh)
 						 .color(BUTTON_COLOUR)
 						 .border(BORDER_BUTTON_WIDTH)
@@ -417,7 +417,7 @@ fn lab_no_chooser(wh_gr: &[f64;2]) -> usize {
 fn convert_data_marker(){}
 fn convert_data(data:&(String,Vec<(i32,f64)>),index:usize) -> Option<(String,Vec<[f64;2]>,usize)> {
 	let mut output_data:Vec<[f64;2]> = Vec::with_capacity(2000);
-	
+
 	if data.1.len()<2001 {
 		//If data set is short use all the data.
 		for (i,f) in data.1.iter() {output_data.push([*i as f64,*f])};
@@ -425,14 +425,14 @@ fn convert_data(data:&(String,Vec<(i32,f64)>),index:usize) -> Option<(String,Vec
 	}else{
 		//If data set is long, average several results at a time.
 		let interval = data.1.len() as f64/2000.0;
-		
+
 		output_data.push([data.1[0].0 as f64,data.1[0].1]);
 		for i in 1..2000 {
 			let i_1f64 = (i-1) as f64;
 			let if64 = i as f64;
 			let p_1 = (i_1f64*interval) as usize;
 			let p = (if64*interval) as usize;
-			
+
 			//An averageing scheme that means that all datapoints contribute.
 			if p-p_1<2 {
 				output_data.push([data.1[p].0 as f64,data.1[p].1]);
@@ -442,18 +442,18 @@ fn convert_data(data:&(String,Vec<(i32,f64)>),index:usize) -> Option<(String,Vec
 		};
 		return Some((data.0.clone(),output_data,index))
 	}
-	
+
 }
 
 //Special mean for &[i32,f64)]
 fn mean_i32f64(input:&[(i32,f64)])->[f64;2] {
-	
+
 	let mut x = [0.0;2];
 	for (i,f) in input.iter() {
 		x[0]+= *i as f64;
 		x[1]+= *f as f64;
 	};
-	
+
 	[x[0]/input.len() as f64,x[1]/input.len() as f64]
 }
 
@@ -473,20 +473,20 @@ pub fn copy_to_clipboard(text:&str){
 // the browser now works
 fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
 					 flow: &mut Flow) {
-	
-	
+
+
 	let ui_wh:[f64;2] = ui.wh_of(ids.master).unwrap_or(DEFAULT_CAN_WH);
-	
+
 	widget::Canvas::new().w(ui_wh[0]/2.0).h(ui_wh[1]/2.0)
 				 .middle_of(ids.master)
 				 .color(BACKGR_COLOUR)
 				 .border(BORDER_WIDTH)
 				 .border_color(BORDER_COLOUR)
 				 .set(ids.browser_canvas,ui);
-	
-	let mut sap = ui.wh_of(ids.browser_canvas).unwrap();			 
-			
-	
+
+	let mut sap = ui.wh_of(ids.browser_canvas).unwrap();
+
+
 	//set move out of folder. NB, this will crash in windows. (Not any more)
 	for _click in widget::Button::new().color(BUTTON_COLOUR)
 									   .w(REP_BOX_W)
@@ -494,9 +494,9 @@ fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
 									   .label("Cancel")
 									   .bottom_right_with_margin_on(ids.browser_canvas,HOR_MAR_BOX)
 									   .set(ids.cancel_button,ui) {
-		flow.load = false;		
+		flow.load = false;
 	};
-	
+
 	//set move out of folder.
 	for _click in widget::Button::new().color(BUTTON_COLOUR)
 									   .w(REP_BOX_W)
@@ -511,15 +511,15 @@ fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
 					Some(dad) => dad.to_owned(),
 					_		  => PathBuf::from(Component::RootDir.as_os_str()),
 				}},
-		};					   
+		};
 	};
-	
+
 	//Make text to display current root directory.
 	let path = format!("Current Path: {}",flow.browser_dir.as_os_str().to_str().unwrap_or("unknown"));
 	widget::Text::new(&path).color(BORDER_COLOUR)
 						    .top_left_with_margin_on(ids.browser_canvas,BORDER_WIDTH)
 						    .set(ids.browser_dir_text,ui);
-	
+
 	//set file browser onto appropriate canvas.
 	for event in widget::FileNavigator::with_extension(&flow.browser_dir, &["csv"])
                 .color(BACKGR_COLOUR)
@@ -528,7 +528,7 @@ fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
                 .h(sap[1]*0.75-BORDER_WIDTH)
                 .down_from(ids.browser_dir_text,HOR_MAR_BOX)
                 .set(ids.browser, ui) {
-		
+
 		// If a double click is made on an entry either:
 		// a) Go to this dir if it's a dir.
 		// b) try open the file if it's a file.
@@ -547,10 +547,10 @@ fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
 								let name:String = entry.file_stem().unwrap_or(OsStr::new("Unknown roll")).to_str().unwrap().to_owned();
 								match File::open(entry) {
 									Ok(file) => {
-										match libdice::parse_azdice_csv_cont(file) {
+										match dice::parse_azdice_csv_cont(file) {
 											Some(data) => {
 												flow.data.push((name,data));
-												
+
 											},
 											_	=> {},
 										};
@@ -562,12 +562,12 @@ fn set_file_browser(ui: &mut conrod::UiCell, ids: &Ids,
 					};
 				};
 			},
-			_	=> {},		
+			_	=> {},
 		};
 	};
-	
+
 }
-	
+
 
 //STRING CONSTANT STORAGE AREA
 
