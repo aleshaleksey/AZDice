@@ -12,6 +12,10 @@ rust:
   - 1.43.0
 name: "azdice-conrod"
 before_script:
+- sudo apt install libxcb-shape0
+- sudo apt install libxcb-xfixes0
+- sudo apt install libxcb-shape0-dev
+- sudo apt install libxcb-xfixes0-dev
 - cargo update
 script:
 - cargo build --release --verbose --all
