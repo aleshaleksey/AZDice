@@ -47,10 +47,12 @@ Compiling
 ---------
 
 ~~Compiles on rust 1.28.0 with cargo build --release --features="winit glium libc"~~
+
 Compiles on rust 1.43.0 with `cargo build` or `cargo build --release`.
 NB: Lastest version is not compatible with older versions of rust.
 
 *Update 2018-10-24: Now builds on travis without doing silly things to conrod.*
+
 *Update 2020-06-22: Now builds on travis again (did not build after incorporation of libazdice, possibly due to update to toolchain.)*
 
 Feedback
