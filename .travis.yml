@@ -1,3 +1,12 @@
+
+addons:
+  apt:
+    packages:
+    - libxcb-shape0
+    - libxcb-xfixes0
+    - libxcb-shape0-dev
+    - libxcb-xfixes0-dev
+    
 language: rust
 cache: cargo
 sudo: true
@@ -12,11 +21,11 @@ rust:
   - 1.38.0
 name: "azdice-conrod"
 before_script:
-- sudo apt install libxcb-shape0
-- sudo apt install libxcb-xfixes0
-- sudo ldconfig
+# - sudo apt install libxcb-shape0
+# - sudo apt install libxcb-xfixes0
+# - sudo ldconfig
 # - sudo apt install libxcb-shape0-dev
 # - sudo apt install libxcb-xfixes0-dev
 - cargo update
 script:
-- cargo build --release --verbose --all
+- cargo build --release
